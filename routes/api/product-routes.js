@@ -1,21 +1,68 @@
 const router = require('express').Router();
 const { Product, Category, Tag, ProductTag } = require('../../models');
 
-// The `/api/products` endpoint
-
-// get all products
+// GET /api/products
 router.get('/', (req, res) => {
   // find all products
+  Product.findAll({
+    attributes: [
+      'id',
+      'product_name',
+      'price',
+      'stock',
+      'category_id'
+    ],
+    include: [
+      {
+        model: Category, 
+        attributes: ['id','category_name']
+      },
+      {
+        model: Tag,
+        attributes: ['id','tag_name']
+      }
+    ]
+  })
+  .then(dbProductData => res.json(dbProductData))
+  .catch(err => {
+    console.log(err);
+    res.status(500).json(err);
+  });
   // be sure to include its associated Category and Tag data
 });
-
-// get one product
+// GET /api/products/1
 router.get('/:id', (req, res) => {
   // find a single product by its `id`
+  Product.findOne({
+    attributes: [
+      'id',
+      'product_name',
+      'price',
+      'stock',
+      'category_id'
+    ],
+    where: {
+      id: req.params.id
+    },
+    include: [
+      {
+        model: Category, 
+        attributes: ['id','category_name']
+      },
+      {
+        model: Tag,
+        attributes: ['id','tag_name']
+      }
+    ]
+  })
+  .then(dbProductData => res.json(dbProductData))
+  .catch(err => {
+    console.log(err);
+    res.status(500).json(err);
+  });
   // be sure to include its associated Category and Tag data
 });
-
-// create new product
+// POST /api/products
 router.post('/', (req, res) => {
   /* req.body should look like this...
     {
@@ -47,7 +94,7 @@ router.post('/', (req, res) => {
     });
 });
 
-// update product
+// PUT /api/product/1
 router.put('/:id', (req, res) => {
   // update product data
   Product.update(req.body, {
@@ -88,9 +135,25 @@ router.put('/:id', (req, res) => {
       res.status(400).json(err);
     });
 });
-
+// DELETE /api/products/1
 router.delete('/:id', (req, res) => {
   // delete one product by its `id` value
+  Product.destroy({
+    where: {
+      id: req.params.id
+    }
+  })
+    .then(dbProductData => {
+      if (!dbProductData) {
+        res.status(404).json({ message: 'No Product found with this id' });
+        return;
+      }
+      res.json(dbUserData);
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json(err);
+    });
 });
 
 module.exports = router;
